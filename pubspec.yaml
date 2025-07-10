@@ -1,0 +1,60 @@
+name: afrijourney
+description: "A new Flutter project."
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  cupertino_icons: ^1.0.5
+  permission_handler: ^11.4.0
+  geolocator: ^14.0.0
+  intl: ^0.18.1
+  url_launcher: ^6.3.1
+  logger: ^2.5.0
+  yandex_maps_mapkit_lite: ^4.11.0-beta
+ 
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/zambia_hero.jpg
+    - assets/victoria_falls.jpg
+    - assets/south_luangwa.jpg
+    - assets/lower_zambezi.jpg
+    - assets/royal_livingstone.jpg
+    - assets/tongabezi.jpg
+    - assets/mfuwe_lodge.jpg
+    - assets/mukambi_lodge.jpg
+    - assets/pioneer_camp.jpg
+    - assets/avani_resort.jpg
+    - assets/kafue_park.jpg
+    - assets/livingstone_museum.jpg
+    - assets/kuomboka.jpg
+    - assets/ncwala.jpg
+    - assets/mutomboko.jpg
+    - assets/shimunenga.jpg
+    - assets/royal_livingstone.jpg
+    - assets/protea_hotel.jpg
+    - assets/mfuwe_lodge.jpg
+    - assets/chaminuka_lodge.jpg
+    - assets/bungee_jumping.jpg
+    - assets/zip_lining.jpg
+    - assets/safari_drive.jpg
+    - assets/rafting.jpg
+    # - assets/marker_attraction.png
+    # - assets/marker_city.png
+
+ 
+
+ 

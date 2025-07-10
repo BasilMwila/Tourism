@@ -1,0 +1,936 @@
+// ignore_for_file: depend_on_referenced_packages, deprecated_member_use, await_only_futures, unused_element, unused_local_variable, unused_field, prefer_final_fields
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:afrijourney/tourist_attractions.dart';
+import 'package:afrijourney/accommodation.dart';
+import 'package:logger/logger.dart';
+import 'package:yandex_maps_mapkit_lite/init.dart' as init;
+import 'package:yandex_maps_mapkit_lite/mapkit.dart' as yandex_mapkit;
+import 'package:yandex_maps_mapkit_lite/mapkit_factory.dart';
+import 'package:yandex_maps_mapkit_lite/yandex_map.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Yandex Maps
+  // For yandex_mapkit 4.1.0, we don't need to manually set API key here
+  // API key should be set in AndroidManifest.xml and Info.plist files
+  init.initMapkit(apiKey: 'c679853d-68dd-4eda-9e3d-6492db67f98d');
+  // Flutter issue with Android view surface
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  runApp(const ZambiaApp());
+}
+
+class ZambiaApp extends StatelessWidget {
+  const ZambiaApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Zambia Tourism',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: const HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+  final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  final List<Widget> _pages = [
+    const HomeScreen(),
+    AttractionsPage(), // ✅ Implemented page
+    AccommodationPage(), // ✅ Implemented page
+    const Placeholder(), // Profile page
+  ];
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: _pages,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        backgroundColor: Colors.white,
+        selectedItemColor: Colors.green[700],
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.attractions),
+            label: 'Attractions',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.hotel),
+            label: 'Stays',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+          color: Colors.white,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      Text(
+                        'Discover the hidden gem of Africa with stunning landscapes, diverse wildlife, and rich cultural heritage.',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Color.fromARGB(255, 253, 251, 251),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildSearchBar(),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Trending Events'),
+                      const SizedBox(height: 12),
+                      _buildTrendingEventsSection(),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Popular Accommodations'),
+                      const SizedBox(height: 12),
+                      _buildHotelsSection(),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Exciting Activities'),
+                      const SizedBox(height: 12),
+                      _buildActivitiesSection(),
+                      const SizedBox(
+                          height:
+                              70), // Extra space at the bottom for floating button
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          )),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showYandexMap(context);
+        },
+        backgroundColor: Colors.green[700],
+        child: const Icon(Icons.map, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search destinations, activities, etc.',
+          border: InputBorder.none,
+          icon: Icon(Icons.search, color: Colors.green[700]),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        TextButton(
+          onPressed: () {},
+          child: Text(
+            'See All',
+            style: TextStyle(
+              color: Colors.green[700],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTrendingEventsSection() {
+    final List<Map<String, dynamic>> events = [
+      {
+        'name': 'Kuomboka Ceremony',
+        'image': 'assets/kuomboka.jpg',
+        'description': 'Annual traditional ceremony of the Lozi people',
+        'date': 'April 2025'
+      },
+      {
+        'name': 'Ncwala Ceremony',
+        'image': 'assets/ncwala.jpg',
+        'description': 'First fruits ceremony of the Ngoni people',
+        'date': 'February 2025'
+      },
+      {
+        'name': 'Mutomboko Ceremony',
+        'image': 'assets/mutomboko.jpg',
+        'description': 'Traditional ceremony of the Lunda people',
+        'date': 'July 2025'
+      },
+      {
+        'name': 'Shimunenga Ceremony',
+        'image': 'assets/shimunenga.jpg',
+        'description': 'Annual ceremony of the Ila people',
+        'date': 'October 2025'
+      },
+    ];
+
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: events.length,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 250,
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      const Color.fromARGB(255, 252, 252, 252).withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Image.asset(
+                    events[index]['image'],
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        BorderRadius.vertical(bottom: Radius.circular(12)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        events[index]['name'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        events[index]['description'],
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today,
+                              size: 14, color: Colors.green[700]),
+                          const SizedBox(width: 4),
+                          Text(
+                            events[index]['date'],
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHotelsSection() {
+    final List<Map<String, dynamic>> hotels = [
+      {
+        'name': 'Royal Livingstone Hotel',
+        'image': 'assets/royal_livingstone.jpg',
+        'price': 'From \$350/night',
+        'location': 'Livingstone',
+      },
+      {
+        'name': 'Protea Hotel Lusaka',
+        'image': 'assets/protea_hotel.jpg',
+        'price': 'From \$180/night',
+        'location': 'Lusaka',
+      },
+      {
+        'name': 'Mfuwe Lodge',
+        'image': 'assets/mfuwe_lodge.jpg',
+        'price': 'From \$420/night',
+        'location': 'South Luangwa',
+      },
+      {
+        'name': 'Chaminuka Lodge',
+        'image': 'assets/chaminuka_lodge.jpg',
+        'price': 'From \$250/night',
+        'location': 'Lusaka',
+      },
+    ];
+
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: hotels.length,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 200,
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      const Color.fromARGB(255, 253, 253, 253).withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Image.asset(
+                    hotels[index]['image'],
+                    height: 100,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        BorderRadius.vertical(bottom: Radius.circular(12)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        hotels[index]['name'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on,
+                              size: 14, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            hotels[index]['location'],
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        hotels[index]['price'],
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildActivitiesSection() {
+    final List<Map<String, dynamic>> activities = [
+      {
+        'name': 'Victoria Falls Bungee Jumping',
+        'image': 'assets/bungee_jumping.jpg',
+        'price': '\$120',
+        'duration': '1 hour',
+      },
+      {
+        'name': 'Zip Lining',
+        'image': 'assets/zip_lining.jpg',
+        'price': '\$80',
+        'duration': '2 hours',
+      },
+      {
+        'name': 'Safari Game Drive',
+        'image': 'assets/safari_drive.jpg',
+        'price': '\$150',
+        'duration': '4 hours',
+      },
+      {
+        'name': 'White Water Rafting',
+        'image': 'assets/rafting.jpg',
+        'price': '\$95',
+        'duration': '3 hours',
+      },
+    ];
+
+    return SizedBox(
+      height: 260,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: activities.length,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 220,
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      const Color.fromARGB(255, 255, 254, 254).withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Image.asset(
+                    activities[index]['image'],
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        BorderRadius.vertical(bottom: Radius.circular(12)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activities[index]['name'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time,
+                              size: 14, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            activities[index]['duration'],
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            activities[index]['price'],
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[700],
+                          minimumSize: const Size(double.infinity, 32),
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: const Text(
+                          'Book Now',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showYandexMap(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color.fromARGB(0, 248, 248, 248),
+      builder: (context) => const YandexMapView(),
+    );
+  }
+}
+
+class YandexMapView extends StatefulWidget {
+  const YandexMapView({super.key});
+
+  @override
+  State<YandexMapView> createState() => _YandexMapViewState();
+}
+
+class _YandexMapViewState extends State<YandexMapView>
+    with WidgetsBindingObserver {
+  // ignore: prefer_typing_uninitialized_variables
+  bool _isFullScreen = false;
+  // ignore: prefer_typing_uninitialized_variables
+  var _mapWindow;
+  final _mapObjects = <yandex_mapkit.MapObject>[];
+  final _logger = Logger();
+
+  // Default center point (coordinates for Lusaka, Zambia)
+  final yandex_mapkit.Point _zambiaCenter =
+      const yandex_mapkit.Point(latitude: -15.4167, longitude: 28.2833);
+  double _zoom = 10.0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    mapkit.onStart(); // Start MapKit when widget creates
+  }
+
+  @override
+  void dispose() {
+    mapkit.onStop(); // Stop MapKit when widget disposes
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      mapkit.onStart(); // App becomes visible
+    } else if (state == AppLifecycleState.paused) {
+      mapkit.onStop(); // App goes to background
+    }
+  }
+
+  void _onMapCreated(mapWindow) {
+    setState(() {
+      _mapWindow = mapWindow;
+    });
+
+    _addZambiaAttractions(null); // Pass a valid argument or null if applicable
+  }
+
+  // Zoom control methods
+  void _zoomIn() {
+    if (_mapWindow != null) {
+      setState(() {
+        _zoom = (_zoom + 0.01).clamp(3.0, 20.0);
+      });
+
+      try {
+        final currentTarget = _mapWindow.map.cameraPosition.target;
+        _mapWindow.map.move(yandex_mapkit.CameraPosition(currentTarget,
+            zoom: _zoom, azimuth: 0, tilt: 0));
+      } catch (e) {
+        _logger.e('Error zooming in: $e');
+      }
+    }
+  }
+
+  void _zoomOut() {
+    if (_mapWindow != null) {
+      setState(() {
+        _zoom -= 0.01;
+        _zoom = _zoom < 3.0 ? 3.0 : _zoom; // Set minimum zoom level
+      });
+
+      try {
+        // For yandex_maps_mapkit_lite: ^4.11.0-beta
+        // Get the current position
+        final currentTarget = _mapWindow.map.cameraPosition.target;
+
+        // Create a new position with updated zoom
+        _mapWindow.map.move(yandex_mapkit.CameraPosition(currentTarget,
+            zoom: _zoom, azimuth: 0, tilt: 0));
+
+        _logger.i('Zooming out, new zoom level: $_zoom');
+      } catch (e) {
+        _logger.e('Error zooming out: $e');
+      }
+    }
+  }
+
+  Future<void> _addZambiaAttractions(dynamic placemark) async {
+    // Add pins for popular Zambia attractions
+    final attractions = [
+      {
+        'name': 'Victoria Falls',
+        'location':
+            const yandex_mapkit.Point(latitude: -17.9244, longitude: 25.8567),
+        'icon': 'assets/marker_attraction.png',
+      },
+      {
+        'name': 'South Luangwa National Park',
+        'location':
+            const yandex_mapkit.Point(latitude: -13.1089, longitude: 31.8022),
+        'icon': 'assets/marker_attraction.png',
+      },
+      {
+        'name': 'Lower Zambezi National Park',
+        'location':
+            const yandex_mapkit.Point(latitude: -15.6964, longitude: 29.4094),
+        'icon': 'assets/marker_attraction.png',
+      },
+      {
+        'name': 'Lusaka',
+        'location':
+            const yandex_mapkit.Point(latitude: -15.4167, longitude: 28.2833),
+        'icon': 'assets/marker_city.png',
+      },
+      {
+        'name': 'Livingstone',
+        'location':
+            const yandex_mapkit.Point(latitude: -17.8419, longitude: 25.8542),
+        'icon': 'assets/marker_city.png',
+      },
+    ];
+
+    for (final attraction in attractions) {
+      try {
+        // For yandex_maps_mapkit_lite: ^4.11.0-beta
+        // This version might have a different way to add placemarks
+      } catch (e) {
+        _logger.e('Error adding placemark: $e');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: _isFullScreen
+          ? MediaQuery.of(context).size.height
+          : MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          _buildMapHeader(),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Stack(
+                children: [
+                  // Actual Yandex Map implementation with the lite package
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: YandexMap(
+                      onMapCreated: _onMapCreated,
+                    ),
+                  ),
+
+                  // Map controls - Added zoom controls
+                  Positioned(
+                    right: 16,
+                    bottom: 100,
+                    child: Column(
+                      children: [
+                        _mapControlButton(Icons.add, _zoomIn),
+                        const SizedBox(height: 8),
+                        _mapControlButton(Icons.remove, _zoomOut),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          _buildLocationSearch(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Explore Map',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.green[700],
+            ),
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                    _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen),
+                onPressed: () {
+                  setState(() {
+                    _isFullScreen = !_isFullScreen;
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _searchLocation(String query) {
+    // Implement the search functionality here
+    _logger.i('Searching for location: $query');
+    // Example: Add logic to search and update the map
+  }
+
+  Widget _buildLocationSearch() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search locations in Zambia',
+                border: InputBorder.none,
+                icon: Icon(Icons.search, color: Colors.green[700]),
+              ),
+              onSubmitted: (value) {
+                _searchLocation(value);
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildQuickFilterButton('Attractions', Icons.attractions),
+              _buildQuickFilterButton('Hotels', Icons.hotel),
+              _buildQuickFilterButton('Restaurants', Icons.restaurant),
+              _buildQuickFilterButton('Events', Icons.event),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickFilterButton(String label, IconData icon) {
+    return Column(
+      children: [
+        CircleAvatar(
+          backgroundColor: Colors.green[100],
+          radius: 20,
+          child: Icon(icon, color: Colors.green[700], size: 20),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.green[700],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _mapControlButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.green[700]),
+        onPressed: onPressed,
+        constraints: const BoxConstraints(
+          minHeight: 36,
+          minWidth: 36,
+          maxHeight: 36,
+          maxWidth: 36,
+        ),
+        padding: EdgeInsets.zero,
+      ),
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty('_mapWindow', _mapWindow));
+    properties.add(DiagnosticsProperty('_zoom', _zoom));
+  }
+}
