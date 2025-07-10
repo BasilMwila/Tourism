@@ -2,61 +2,62 @@
 class AccommodationModel {
   final int id;
   final String name;
-  final String location;
   final String description;
-  final String imagePath;
-  final double rating;
-  final double price;
-  final List<String> amenities;
+  final String location;
   final String type;
-  final double latitude;
-  final double longitude;
-  final int totalRooms;
-  final int availableRooms;
+  final double price;
+  final double rating;
+  final String imagePath;
+  final List<String> amenities;
+  final List<String> images;
+  final Map<String, dynamic>? coordinates;
   final bool isAvailable;
-  final List<String> gallery;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final bool isFavorite;
+  final int reviewCount;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   AccommodationModel({
     required this.id,
     required this.name,
-    required this.location,
     required this.description,
-    required this.imagePath,
-    required this.rating,
-    required this.price,
-    required this.amenities,
+    required this.location,
     required this.type,
-    required this.latitude,
-    required this.longitude,
-    required this.totalRooms,
-    required this.availableRooms,
+    required this.price,
+    required this.rating,
+    required this.imagePath,
+    required this.amenities,
+    this.images = const [],
+    this.coordinates,
     this.isAvailable = true,
-    required this.gallery,
-    required this.createdAt,
-    required this.updatedAt,
+    this.isFavorite = false,
+    this.reviewCount = 0,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory AccommodationModel.fromJson(Map<String, dynamic> json) {
     return AccommodationModel(
-      id: json['id'],
-      name: json['name'],
-      location: json['location'],
-      description: json['description'],
-      imagePath: json['image_path'],
-      rating: json['rating'].toDouble(),
-      price: json['price'].toDouble(),
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      location: json['location'] ?? '',
+      type: json['type'] ?? '',
+      price: (json['price'] ?? 0.0).toDouble(),
+      rating: (json['rating'] ?? 0.0).toDouble(),
+      imagePath: json['image_path'] ?? json['imagePath'] ?? '',
       amenities: List<String>.from(json['amenities'] ?? []),
-      type: json['type'],
-      latitude: json['latitude'].toDouble(),
-      longitude: json['longitude'].toDouble(),
-      totalRooms: json['total_rooms'],
-      availableRooms: json['available_rooms'],
-      isAvailable: json['is_available'] ?? true,
-      gallery: List<String>.from(json['gallery'] ?? []),
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      images: List<String>.from(json['images'] ?? []),
+      coordinates: json['coordinates'],
+      isAvailable: json['is_available'] ?? json['isAvailable'] ?? true,
+      isFavorite: json['is_favorite'] ?? json['isFavorite'] ?? false,
+      reviewCount: json['review_count'] ?? json['reviewCount'] ?? 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : null,
     );
   }
 
@@ -64,61 +65,72 @@ class AccommodationModel {
     return {
       'id': id,
       'name': name,
-      'location': location,
       'description': description,
-      'image_path': imagePath,
-      'rating': rating,
-      'price': price,
-      'amenities': amenities,
+      'location': location,
       'type': type,
-      'latitude': latitude,
-      'longitude': longitude,
-      'total_rooms': totalRooms,
-      'available_rooms': availableRooms,
+      'price': price,
+      'rating': rating,
+      'image_path': imagePath,
+      'amenities': amenities,
+      'images': images,
+      'coordinates': coordinates,
       'is_available': isAvailable,
-      'gallery': gallery,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'is_favorite': isFavorite,
+      'review_count': reviewCount,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
   AccommodationModel copyWith({
     int? id,
     String? name,
-    String? location,
     String? description,
-    String? imagePath,
-    double? rating,
-    double? price,
-    List<String>? amenities,
+    String? location,
     String? type,
-    double? latitude,
-    double? longitude,
-    int? totalRooms,
-    int? availableRooms,
+    double? price,
+    double? rating,
+    String? imagePath,
+    List<String>? amenities,
+    List<String>? images,
+    Map<String, dynamic>? coordinates,
     bool? isAvailable,
-    List<String>? gallery,
+    bool? isFavorite,
+    int? reviewCount,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return AccommodationModel(
       id: id ?? this.id,
       name: name ?? this.name,
-      location: location ?? this.location,
       description: description ?? this.description,
-      imagePath: imagePath ?? this.imagePath,
-      rating: rating ?? this.rating,
-      price: price ?? this.price,
-      amenities: amenities ?? this.amenities,
+      location: location ?? this.location,
       type: type ?? this.type,
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
-      totalRooms: totalRooms ?? this.totalRooms,
-      availableRooms: availableRooms ?? this.availableRooms,
+      price: price ?? this.price,
+      rating: rating ?? this.rating,
+      imagePath: imagePath ?? this.imagePath,
+      amenities: amenities ?? this.amenities,
+      images: images ?? this.images,
+      coordinates: coordinates ?? this.coordinates,
       isAvailable: isAvailable ?? this.isAvailable,
-      gallery: gallery ?? this.gallery,
+      isFavorite: isFavorite ?? this.isFavorite,
+      reviewCount: reviewCount ?? this.reviewCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  @override
+  String toString() {
+    return 'AccommodationModel(id: $id, name: $name, location: $location, type: $type, price: $price, rating: $rating)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AccommodationModel && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

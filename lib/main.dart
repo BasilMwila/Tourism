@@ -1,5 +1,5 @@
 // lib/main.dart - Updated with backend integration
-// ignore_for_file: depend_on_referenced_packages, deprecated_member_use, await_only_futures, unused_element, unused_local_variable, unused_field, prefer_final_fields
+// ignore_for_file: depend_on_referenced_packages, deprecated_member_use, await_only_futures, unused_element, unused_local_variable, unused_field, prefer_final_fields, use_build_context_synchronously, prefer_typing_uninitialized_variables, unnecessary_import
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,7 @@ import 'package:yandex_maps_mapkit_lite/yandex_map.dart';
 import 'providers/app_provider.dart';
 import 'services/storage_service.dart';
 import 'constants/app_constants.dart';
-import 'screens/onboarding_screen.dart';
+import 'screens/auth/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
 
 void main() async {
@@ -209,7 +209,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const HomeScreen(),
     AttractionsPage(),
-    AccommodationPage(),
+    const AccommodationPage(),
     const ProfileScreen(),
   ];
 
@@ -410,7 +410,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Rest of the existing UI methods remain the same...
   Widget _buildTrendingEventsSection() {
     final List<Map<String, dynamic>> events = [
       {
@@ -419,7 +418,18 @@ class HomeScreen extends StatelessWidget {
         'description': 'Annual traditional ceremony of the Lozi people',
         'date': 'April 2025'
       },
-      // ... other events
+      {
+        'name': 'Nc\'wala Ceremony',
+        'image': 'assets/ncwala.jpg',
+        'description': 'Traditional harvest festival of the Ngoni people',
+        'date': 'February 2025'
+      },
+      {
+        'name': 'Lwiindi Ceremony',
+        'image': 'assets/lwiindi.jpg',
+        'description': 'Cultural ceremony of the Tonga people',
+        'date': 'July 2025'
+      },
     ];
 
     return SizedBox(
@@ -607,7 +617,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'From \${accommodation.price.toStringAsFixed(0)}/night',
+                            'From \$${accommodation.price.toStringAsFixed(0)}/night',
                             style: TextStyle(
                               color: Colors.green[700],
                               fontWeight: FontWeight.w500,
@@ -927,141 +937,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-// Onboarding Screen
-class OnboardingScreen extends StatelessWidget {
-  const OnboardingScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.green[700]!,
-              Colors.green[500]!,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(),
-                Icon(
-                  Icons.landscape,
-                  size: 120,
-                  color: Colors.white,
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  'Welcome to ${AppConstants.appName}',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  AppConstants.appDescription,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 48),
-                Text(
-                  'Discover amazing attractions, find perfect accommodations, and create unforgettable memories in Zambia.',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white60,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const Spacer(),
-                ElevatedButton(
-                  onPressed: () {
-                    context.read<AppProvider>().completeOnboarding();
-                    Navigator.of(context).pushReplacementNamed('/login');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.green[700],
-                    minimumSize: const Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    'Get Started',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Login Screen placeholder (create separate file)
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.landscape,
-                size: 80,
-                color: Colors.green[700],
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Welcome Back',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[700],
-                ),
-              ),
-              const SizedBox(height: 32),
-              // Add login form here
-              ElevatedButton(
-                onPressed: () {
-                  // Temporary: Skip login for demo
-                  Navigator.of(context).pushReplacementNamed('/home');
-                },
-                child: const Text('Skip Login (Demo)'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Yandex Map View (existing implementation)
+// Yandex Map View
 class YandexMapView extends StatefulWidget {
   const YandexMapView({super.key});
 
@@ -1143,7 +1019,36 @@ class _YandexMapViewState extends State<YandexMapView>
   }
 
   Future<void> _addZambiaAttractions() async {
-    // Implementation for adding attraction markers
+    // Add markers for popular Zambian attractions
+    final attractions = [
+      {
+        'name': 'Victoria Falls',
+        'lat': -17.9243,
+        'lng': 25.8572,
+        'description': 'One of the largest waterfalls in the world'
+      },
+      {
+        'name': 'South Luangwa National Park',
+        'lat': -13.0864,
+        'lng': 31.8656,
+        'description': 'Premier wildlife destination'
+      },
+      {
+        'name': 'Kafue National Park',
+        'lat': -15.5,
+        'lng': 26.0,
+        'description': 'Largest national park in Zambia'
+      },
+      {
+        'name': 'Lower Zambezi National Park',
+        'lat': -15.75,
+        'lng': 29.25,
+        'description': 'Scenic park along the Zambezi River'
+      },
+    ];
+
+    // This is a simplified version - you would implement proper marker addition here
+    debugPrint('Adding ${attractions.length} attraction markers to map');
   }
 
   @override
@@ -1265,6 +1170,7 @@ class _YandexMapViewState extends State<YandexMapView>
               ),
               onSubmitted: (value) {
                 // Handle location search
+                debugPrint('Searching for: $value');
               },
             ),
           ),
@@ -1285,22 +1191,27 @@ class _YandexMapViewState extends State<YandexMapView>
   }
 
   Widget _buildQuickFilterButton(String label, IconData icon) {
-    return Column(
-      children: [
-        CircleAvatar(
-          backgroundColor: Colors.green[100],
-          radius: 20,
-          child: Icon(icon, color: Colors.green[700], size: 20),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.green[700],
+    return GestureDetector(
+      onTap: () {
+        debugPrint('Filter tapped: $label');
+      },
+      child: Column(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.green[100],
+            radius: 20,
+            child: Icon(icon, color: Colors.green[700], size: 20),
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.green[700],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

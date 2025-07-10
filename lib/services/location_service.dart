@@ -1,6 +1,5 @@
 // lib/services/location_service.dart
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class LocationService {
   // Check if location services are enabled
@@ -43,7 +42,9 @@ class LocationService {
 
       // Get current position
       return await Geolocator.getCurrentPosition(
+        // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.high,
+        // ignore: deprecated_member_use
         timeLimit: const Duration(seconds: 10),
       );
     } catch (e) {

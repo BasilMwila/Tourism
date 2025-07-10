@@ -14,6 +14,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true  // Add this line
     }
 
     kotlinOptions {
@@ -46,6 +47,7 @@ flutter {
 
 dependencies {
     implementation("com.google.android.gms:play-services-location:21.1.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")  // Add this line
 
     // Work Manager dependency. Uncomment if you want to use offline maps
     // implementation("androidx.work:work-runtime:2.9.0")

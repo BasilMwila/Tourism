@@ -1,4 +1,5 @@
 // lib/providers/app_provider.dart
+import 'package:afrijourney/services/accommodation_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/user_model.dart';
@@ -7,7 +8,6 @@ import '../models/accommodation_model.dart';
 import '../models/booking_model.dart';
 import '../services/auth_service.dart';
 import '../services/attraction_service.dart';
-import '../services/accommodation_service.dart';
 import '../services/booking_service.dart';
 import '../services/location_service.dart';
 import '../services/storage_service.dart';

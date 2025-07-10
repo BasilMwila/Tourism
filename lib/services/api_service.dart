@@ -1,10 +1,6 @@
 // lib/services/api_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/attraction_model.dart';
-import '../models/accommodation_model.dart';
-import '../models/booking_model.dart';
-import '../models/user_model.dart';
 
 class ApiService {
   static const String baseUrl =

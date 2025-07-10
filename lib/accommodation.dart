@@ -1,5 +1,5 @@
 // File: accommodation.dart
-// ignore_for_file: use_super_parameters, prefer_interpolation_to_compose_strings, sort_child_properties_last, use_build_context_synchronously, avoid_print
+// ignore_for_file: use_super_parameters, prefer_interpolation_to_compose_strings, sort_child_properties_last, use_build_context_synchronously, avoid_print, prefer_const_constructors
 
 import 'package:flutter/material.dart';
 import 'package:afrijourney/booking.dart';
