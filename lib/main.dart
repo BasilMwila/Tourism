@@ -1,4 +1,4 @@
-// lib/main.dart - Updated with backend integration
+// lib/main.dart - COMPLETE FIXED VERSION
 // ignore_for_file: depend_on_referenced_packages, deprecated_member_use, await_only_futures, unused_element, unused_local_variable, unused_field, prefer_final_fields, use_build_context_synchronously, prefer_typing_uninitialized_variables, unnecessary_import
 
 import 'package:flutter/foundation.dart';
@@ -116,25 +116,28 @@ class ZambiaApp extends StatelessWidget {
     );
   }
 
+  // FIXED: Proper initialization handling
   Widget _buildInitialScreen(AppProvider appProvider) {
-    return FutureBuilder(
-      future: appProvider.initializeApp(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SplashScreen();
-        }
+    // If not initialized yet, show splash and initialize
+    if (!appProvider.isInitialized) {
+      // Initialize in the background - don't block the UI
+      Future.microtask(() async {
+        await appProvider.initializeApp();
+      });
 
-        if (!appProvider.isOnboardingCompleted) {
-          return const OnboardingScreen();
-        }
+      return const SplashScreen();
+    }
 
-        if (!appProvider.isLoggedIn) {
-          return const LoginScreen();
-        }
+    // Once initialized, check onboarding and auth status
+    if (!appProvider.isOnboardingCompleted) {
+      return const OnboardingScreen();
+    }
 
-        return const HomePage();
-      },
-    );
+    if (!appProvider.isLoggedIn) {
+      return const LoginScreen();
+    }
+
+    return const HomePage();
   }
 }
 
@@ -267,8 +270,28 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+// FIXED HomeScreen Widget
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load data in initState, not in build
+    _loadInitialData();
+  }
+
+  void _loadInitialData() async {
+    final provider = context.read<AppProvider>();
+    if (!provider.isInitialized) {
+      await provider.initializeApp();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -533,7 +556,10 @@ class HomeScreen extends StatelessWidget {
         final accommodations = provider.accommodations.take(4).toList();
 
         if (accommodations.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return const SizedBox(
+            height: 200,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         return SizedBox(

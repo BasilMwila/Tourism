@@ -1,4 +1,4 @@
-// lib/providers/app_provider.dart
+// lib/providers/app_provider.dart - FIXED VERSION
 import 'package:afrijourney/services/accommodation_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,6 +17,7 @@ class AppProvider with ChangeNotifier {
   UserModel? _currentUser;
   bool _isLoggedIn = false;
   bool _isLoading = false;
+  bool _isInitialized = false; // NEW: Track initialization state
 
   // Location state
   Position? _currentPosition;
@@ -38,6 +39,7 @@ class AppProvider with ChangeNotifier {
   UserModel? get currentUser => _currentUser;
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
+  bool get isInitialized => _isInitialized; // NEW
   Position? get currentPosition => _currentPosition;
   bool get hasLocationPermission => _hasLocationPermission;
   List<AttractionModel> get attractions => _attractions;
@@ -50,8 +52,10 @@ class AppProvider with ChangeNotifier {
   String get selectedLanguage => _selectedLanguage;
   bool get isOnboardingCompleted => _isOnboardingCompleted;
 
-  // Initialize app state
+  // FIXED: Initialize app state - only called once
   Future<void> initializeApp() async {
+    if (_isInitialized) return; // Prevent multiple initializations
+
     _setLoading(true);
 
     try {
@@ -67,12 +71,31 @@ class AppProvider with ChangeNotifier {
       // Get location permission
       await _checkLocationPermission();
 
-      // Load initial data
-      await _loadInitialData();
+      // Load initial data - but don't block initialization
+      _loadInitialDataInBackground();
+
+      _isInitialized = true;
     } catch (e) {
       debugPrint('Error initializing app: $e');
+      _isInitialized = true; // Still mark as initialized to prevent loops
     } finally {
       _setLoading(false);
+    }
+  }
+
+  // NEW: Load data in background without blocking UI
+  void _loadInitialDataInBackground() async {
+    try {
+      await Future.wait([
+        loadAttractions(),
+        loadAccommodations(),
+      ]);
+
+      if (_isLoggedIn) {
+        await _loadUserData();
+      }
+    } catch (e) {
+      debugPrint('Error loading initial data: $e');
     }
   }
 
@@ -164,13 +187,14 @@ class AppProvider with ChangeNotifier {
     }
   }
 
-  // Data loading methods
+  // FIXED: Data loading methods - better error handling
   Future<void> loadAttractions() async {
     try {
       _attractions = await AttractionService.getAllAttractions();
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading attractions: $e');
+      // Don't rethrow - use fallback data from service
     }
   }
 
@@ -180,6 +204,7 @@ class AppProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading accommodations: $e');
+      // Don't rethrow - use fallback data from service
     }
   }
 
@@ -194,6 +219,8 @@ class AppProvider with ChangeNotifier {
       debugPrint('Error loading user bookings: $e');
     }
   }
+
+  // Rest of the methods remain the same...
 
   // Booking methods
   Future<bool> createBooking({
@@ -356,17 +383,6 @@ class AppProvider with ChangeNotifier {
     _hasLocationPermission = await LocationService.hasLocationPermission();
     if (_hasLocationPermission) {
       await getCurrentLocation();
-    }
-  }
-
-  Future<void> _loadInitialData() async {
-    await Future.wait([
-      loadAttractions(),
-      loadAccommodations(),
-    ]);
-
-    if (_isLoggedIn) {
-      await _loadUserData();
     }
   }
 

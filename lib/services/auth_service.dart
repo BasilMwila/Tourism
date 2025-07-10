@@ -1,4 +1,4 @@
-// lib/services/auth_service.dart
+// lib/services/auth_service.dart - FIXED RESPONSE PARSING
 // ignore_for_file: curly_braces_in_flow_control_structures
 
 import 'dart:convert';
@@ -11,7 +11,7 @@ class AuthService {
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';
 
-  // Register user
+  // Register user - FIXED PARSING
   static Future<Map<String, dynamic>> register({
     required String name,
     required String email,
@@ -25,23 +25,62 @@ class AuthService {
         'password': password,
         if (phone != null) 'phone': phone,
       });
+
+      print('🔍 Raw response body: ${response.body}');
       ApiService.handleError(response);
 
-      final data = jsonDecode(response.body);
+      final responseData = jsonDecode(response.body);
+      print('🔍 Parsed response data: $responseData');
 
-      // Save token and user data
-      if (data['token'] != null) {
-        await _saveToken(data['token']);
-        await _saveUser(UserModel.fromJson(data['user']));
+      // Handle the response structure from your backend
+      Map<String, dynamic> data;
+      if (responseData is Map<String, dynamic>) {
+        if (responseData.containsKey('data')) {
+          // Response format: {"success": true, "data": {"user": {...}, "token": "..."}}
+          data = responseData['data'] as Map<String, dynamic>;
+        } else {
+          // Response format: {"success": true, "user": {...}, "token": "..."}
+          data = responseData;
+        }
+      } else {
+        throw Exception('Invalid response format');
       }
 
-      return data;
+      print('🔍 Final data structure: $data');
+
+      // Extract user and token
+      final userData = data['user'] as Map<String, dynamic>?;
+      final token = data['token'] as String?;
+
+      if (userData == null) {
+        throw Exception('User data not found in response');
+      }
+
+      if (token == null) {
+        throw Exception('Token not found in response');
+      }
+
+      // Save token and user data
+      await _saveToken(token);
+
+      // Create UserModel from the response
+      final user = UserModel.fromJson(userData);
+      await _saveUser(user);
+
+      print('✅ Registration successful for user: ${user.email}');
+
+      return {
+        'success': true,
+        'user': userData,
+        'token': token,
+      };
     } catch (e) {
+      print('❌ Registration error: $e');
       throw Exception('Failed to register: $e');
     }
   }
 
-  // Login user
+  // Login user - FIXED PARSING
   static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
@@ -51,18 +90,57 @@ class AuthService {
         'email': email,
         'password': password,
       });
+
+      print('🔍 Raw response body: ${response.body}');
       ApiService.handleError(response);
 
-      final data = jsonDecode(response.body);
+      final responseData = jsonDecode(response.body);
+      print('🔍 Parsed response data: $responseData');
 
-      // Save token and user data
-      if (data['token'] != null) {
-        await _saveToken(data['token']);
-        await _saveUser(UserModel.fromJson(data['user']));
+      // Handle the response structure from your backend
+      Map<String, dynamic> data;
+      if (responseData is Map<String, dynamic>) {
+        if (responseData.containsKey('data')) {
+          // Response format: {"success": true, "data": {"user": {...}, "token": "..."}}
+          data = responseData['data'] as Map<String, dynamic>;
+        } else {
+          // Response format: {"success": true, "user": {...}, "token": "..."}
+          data = responseData;
+        }
+      } else {
+        throw Exception('Invalid response format');
       }
 
-      return data;
+      print('🔍 Final data structure: $data');
+
+      // Extract user and token
+      final userData = data['user'] as Map<String, dynamic>?;
+      final token = data['token'] as String?;
+
+      if (userData == null) {
+        throw Exception('User data not found in response');
+      }
+
+      if (token == null) {
+        throw Exception('Token not found in response');
+      }
+
+      // Save token and user data
+      await _saveToken(token);
+
+      // Create UserModel from the response
+      final user = UserModel.fromJson(userData);
+      await _saveUser(user);
+
+      print('✅ Login successful for user: ${user.email}');
+
+      return {
+        'success': true,
+        'user': userData,
+        'token': token,
+      };
     } catch (e) {
+      print('❌ Login error: $e');
       throw Exception('Failed to login: $e');
     }
   }
@@ -76,6 +154,7 @@ class AuthService {
       }
     } catch (e) {
       // Continue with local logout even if API call fails
+      print('⚠️  Logout API call failed, continuing with local logout: $e');
     } finally {
       await _removeToken();
       await _removeUser();
@@ -134,7 +213,7 @@ class AuthService {
     }
   }
 
-  // Get current user
+  // Get current user - FIXED PARSING
   static Future<UserModel?> getCurrentUser() async {
     try {
       final token = await getToken();
@@ -143,16 +222,30 @@ class AuthService {
       final response = await ApiService.get('$endpoint/user', token: token);
       ApiService.handleError(response);
 
-      final data = jsonDecode(response.body)['data'];
-      final user = UserModel.fromJson(data);
+      final responseData = jsonDecode(response.body);
+
+      // Handle the response structure
+      Map<String, dynamic> userData;
+      if (responseData is Map<String, dynamic>) {
+        if (responseData.containsKey('data')) {
+          userData = responseData['data'] as Map<String, dynamic>;
+        } else {
+          userData = responseData;
+        }
+      } else {
+        throw Exception('Invalid user response format');
+      }
+
+      final user = UserModel.fromJson(userData);
       await _saveUser(user);
       return user;
     } catch (e) {
+      print('⚠️  Failed to get current user from API, using cached: $e');
       return await _getSavedUser();
     }
   }
 
-  // Update profile
+  // Update profile - FIXED PARSING
   static Future<UserModel> updateProfile({
     String? name,
     String? phone,
@@ -179,8 +272,21 @@ class AuthService {
       );
       ApiService.handleError(response);
 
-      final data = jsonDecode(response.body)['data'];
-      final user = UserModel.fromJson(data);
+      final responseData = jsonDecode(response.body);
+
+      // Handle the response structure
+      Map<String, dynamic> userData;
+      if (responseData is Map<String, dynamic>) {
+        if (responseData.containsKey('data')) {
+          userData = responseData['data'] as Map<String, dynamic>;
+        } else {
+          userData = responseData;
+        }
+      } else {
+        throw Exception('Invalid profile update response format');
+      }
+
+      final user = UserModel.fromJson(userData);
       await _saveUser(user);
       return user;
     } catch (e) {
@@ -231,23 +337,31 @@ class AuthService {
   static Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(tokenKey, token);
+    print('🔐 Token saved successfully');
   }
 
   static Future<void> _removeToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenKey);
+    print('🔐 Token removed');
   }
 
   static Future<void> _saveUser(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(userKey, jsonEncode(user.toJson()));
+    print('👤 User data saved: ${user.email}');
   }
 
   static Future<UserModel?> _getSavedUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(userKey);
-    if (userJson != null) {
-      return UserModel.fromJson(jsonDecode(userJson));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString(userKey);
+      if (userJson != null) {
+        final userData = jsonDecode(userJson) as Map<String, dynamic>;
+        return UserModel.fromJson(userData);
+      }
+    } catch (e) {
+      print('⚠️  Error getting saved user: $e');
     }
     return null;
   }
@@ -255,5 +369,6 @@ class AuthService {
   static Future<void> _removeUser() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(userKey);
+    print('👤 User data removed');
   }
 }
