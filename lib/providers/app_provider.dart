@@ -1,4 +1,4 @@
-// lib/providers/app_provider.dart - FIXED VERSION
+// lib/providers/app_provider.dart - FIXED VERSION TO STOP LOOPS
 import 'package:afrijourney/services/accommodation_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,7 +17,7 @@ class AppProvider with ChangeNotifier {
   UserModel? _currentUser;
   bool _isLoggedIn = false;
   bool _isLoading = false;
-  bool _isInitialized = false; // NEW: Track initialization state
+  bool _isInitialized = false;
 
   // Location state
   Position? _currentPosition;
@@ -30,6 +30,12 @@ class AppProvider with ChangeNotifier {
   List<AttractionModel> _favoriteAttractions = [];
   List<AccommodationModel> _favoriteAccommodations = [];
 
+  // ADDED: Data loading state to prevent loops
+  bool _attractionsLoaded = false;
+  bool _accommodationsLoaded = false;
+  bool _isLoadingAttractions = false;
+  bool _isLoadingAccommodations = false;
+
   // UI state
   String _selectedTheme = 'system';
   String _selectedLanguage = 'en';
@@ -39,7 +45,7 @@ class AppProvider with ChangeNotifier {
   UserModel? get currentUser => _currentUser;
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
-  bool get isInitialized => _isInitialized; // NEW
+  bool get isInitialized => _isInitialized;
   Position? get currentPosition => _currentPosition;
   bool get hasLocationPermission => _hasLocationPermission;
   List<AttractionModel> get attractions => _attractions;
@@ -71,8 +77,8 @@ class AppProvider with ChangeNotifier {
       // Get location permission
       await _checkLocationPermission();
 
-      // Load initial data - but don't block initialization
-      _loadInitialDataInBackground();
+      // Load initial data - but only once
+      await _loadInitialDataOnce();
 
       _isInitialized = true;
     } catch (e) {
@@ -83,13 +89,18 @@ class AppProvider with ChangeNotifier {
     }
   }
 
-  // NEW: Load data in background without blocking UI
-  void _loadInitialDataInBackground() async {
+  // FIXED: Load data only once, not in a loop
+  Future<void> _loadInitialDataOnce() async {
     try {
-      await Future.wait([
-        loadAttractions(),
-        loadAccommodations(),
-      ]);
+      // Load attractions only if not already loaded
+      if (!_attractionsLoaded && !_isLoadingAttractions) {
+        await loadAttractions();
+      }
+
+      // Load accommodations only if not already loaded
+      if (!_accommodationsLoaded && !_isLoadingAccommodations) {
+        await loadAccommodations();
+      }
 
       if (_isLoggedIn) {
         await _loadUserData();
@@ -187,24 +198,49 @@ class AppProvider with ChangeNotifier {
     }
   }
 
-  // FIXED: Data loading methods - better error handling
-  Future<void> loadAttractions() async {
+  // FIXED: Data loading methods with proper state management
+  Future<void> loadAttractions({bool forceRefresh = false}) async {
+    // Prevent loading if already loaded or currently loading
+    if ((_attractionsLoaded && !forceRefresh) || _isLoadingAttractions) {
+      debugPrint('Attractions already loaded or loading, skipping...');
+      return;
+    }
+
+    _isLoadingAttractions = true;
     try {
-      _attractions = await AttractionService.getAllAttractions();
+      debugPrint('Loading attractions...');
+      final newAttractions = await AttractionService.getAllAttractions();
+      _attractions = newAttractions;
+      _attractionsLoaded = true;
+      debugPrint('Loaded ${_attractions.length} attractions');
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading attractions: $e');
-      // Don't rethrow - use fallback data from service
+    } finally {
+      _isLoadingAttractions = false;
     }
   }
 
-  Future<void> loadAccommodations() async {
+  Future<void> loadAccommodations({bool forceRefresh = false}) async {
+    // Prevent loading if already loaded or currently loading
+    if ((_accommodationsLoaded && !forceRefresh) || _isLoadingAccommodations) {
+      debugPrint('Accommodations already loaded or loading, skipping...');
+      return;
+    }
+
+    _isLoadingAccommodations = true;
     try {
-      _accommodations = await AccommodationService.getAllAccommodations();
+      debugPrint('Loading accommodations...');
+      final newAccommodations =
+          await AccommodationService.getAllAccommodations();
+      _accommodations = newAccommodations;
+      _accommodationsLoaded = true;
+      debugPrint('Loaded ${_accommodations.length} accommodations');
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading accommodations: $e');
-      // Don't rethrow - use fallback data from service
+    } finally {
+      _isLoadingAccommodations = false;
     }
   }
 
@@ -218,6 +254,27 @@ class AppProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Error loading user bookings: $e');
     }
+  }
+
+  // ADDED: Manual refresh methods
+  Future<void> refreshData() async {
+    debugPrint('Manually refreshing all data...');
+    await Future.wait([
+      loadAttractions(forceRefresh: true),
+      loadAccommodations(forceRefresh: true),
+    ]);
+
+    if (_isLoggedIn) {
+      await _loadUserData();
+    }
+  }
+
+  Future<void> refreshAttractions() async {
+    await loadAttractions(forceRefresh: true);
+  }
+
+  Future<void> refreshAccommodations() async {
+    await loadAccommodations(forceRefresh: true);
   }
 
   // Rest of the methods remain the same...

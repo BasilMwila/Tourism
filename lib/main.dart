@@ -1,4 +1,4 @@
-// lib/main.dart - COMPLETE FIXED VERSION
+// lib/main.dart - UPDATED WITH PROPER NAVIGATION
 // ignore_for_file: depend_on_referenced_packages, deprecated_member_use, await_only_futures, unused_element, unused_local_variable, unused_field, prefer_final_fields, use_build_context_synchronously, prefer_typing_uninitialized_variables, unnecessary_import
 
 import 'package:flutter/foundation.dart';
@@ -70,6 +70,10 @@ class ZambiaApp extends StatelessWidget {
               '/home': (context) => const HomePage(),
               '/login': (context) => const LoginScreen(),
               '/onboarding': (context) => const OnboardingScreen(),
+              '/attractions': (context) => AttractionsPage(),
+              '/accommodations': (context) => const AccommodationPage(),
+              '/events': (context) => const EventsPage(),
+              '/activities': (context) => const ActivitiesPage(),
             },
           );
         },
@@ -270,7 +274,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// FIXED HomeScreen Widget
+// FIXED HomeScreen Widget with proper navigation
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -356,18 +360,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 24),
                     _buildSearchBar(context),
                     const SizedBox(height: 24),
-                    _buildSectionTitle('Trending Events'),
+                    _buildSectionTitle('Trending Events', () {
+                      Navigator.pushNamed(context, '/events');
+                    }),
                     const SizedBox(height: 12),
                     _buildTrendingEventsSection(),
                     const SizedBox(height: 24),
-                    _buildSectionTitle('Popular Accommodations'),
+                    _buildSectionTitle('Popular Accommodations', () {
+                      Navigator.pushNamed(context, '/accommodations');
+                    }),
                     const SizedBox(height: 12),
                     _buildHotelsSection(context),
                     const SizedBox(height: 24),
-                    _buildSectionTitle('Exciting Activities'),
+                    _buildSectionTitle('Exciting Activities', () {
+                      Navigator.pushNamed(context, '/activities');
+                    }),
                     const SizedBox(height: 12),
                     _buildActivitiesSection(),
-                    const SizedBox(height: 70),
+                    const SizedBox(height: 64),
                   ],
                 ),
               ),
@@ -408,7 +418,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  // UPDATED: Section title with navigation callback
+  Widget _buildSectionTitle(String title, VoidCallback onSeeAllPressed) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -420,7 +431,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: onSeeAllPressed, // Use the provided callback
           child: Text(
             'See All',
             style: TextStyle(
@@ -461,88 +472,94 @@ class _HomeScreenState extends State<HomeScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: events.length,
         itemBuilder: (context, index) {
-          return Container(
-            width: 250,
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  spreadRadius: 1,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Image.asset(
-                    events[index]['image'],
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 120,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.image_not_supported),
-                      );
-                    },
+          return GestureDetector(
+            onTap: () {
+              // Navigate to event details or events page
+              Navigator.pushNamed(context, '/events');
+            },
+            child: Container(
+              width: 250,
+              margin: const EdgeInsets.only(right: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
                     borderRadius:
-                        BorderRadius.vertical(bottom: Radius.circular(12)),
+                        const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: Image.asset(
+                      events[index]['image'],
+                      height: 120,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 120,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported),
+                        );
+                      },
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        events[index]['name'],
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        events[index]['description'],
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              size: 14, color: Colors.green[700]),
-                          const SizedBox(width: 4),
-                          Text(
-                            events[index]['date'],
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.w500,
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          BorderRadius.vertical(bottom: Radius.circular(12)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          events[index]['name'],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
-                        ],
-                      ),
-                    ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          events[index]['description'],
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today,
+                                size: 14, color: Colors.green[700]),
+                            const SizedBox(width: 4),
+                            Text(
+                              events[index]['date'],
+                              style: TextStyle(
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -569,90 +586,96 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: accommodations.length,
             itemBuilder: (context, index) {
               final accommodation = accommodations[index];
-              return Container(
-                width: 200,
-                margin: const EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 5,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: Image.asset(
-                        accommodation.imagePath,
-                        height: 100,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 100,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image_not_supported),
-                          );
-                        },
+              return GestureDetector(
+                onTap: () {
+                  // Navigate to accommodation details or accommodations page
+                  Navigator.pushNamed(context, '/accommodations');
+                },
+                child: Container(
+                  width: 200,
+                  margin: const EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius:
-                            BorderRadius.vertical(bottom: Radius.circular(12)),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12)),
+                        child: Image.asset(
+                          accommodation.imagePath,
+                          height: 100,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 100,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.image_not_supported),
+                            );
+                          },
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            accommodation.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.location_on,
-                                  size: 14, color: Colors.grey[600]),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  accommodation.location,
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(12)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              accommodation.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'From \$${accommodation.price.toStringAsFixed(0)}/night',
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.w500,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.location_on,
+                                    size: 14, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    accommodation.location,
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'From \$${accommodation.price.toStringAsFixed(0)}/night',
+                              style: TextStyle(
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -691,107 +714,115 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return SizedBox(
-      height: 260,
+      height: 250,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: activities.length,
         itemBuilder: (context, index) {
-          return Container(
-            width: 220,
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  spreadRadius: 1,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Image.asset(
-                    activities[index]['image'],
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 120,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.image_not_supported),
-                      );
-                    },
+          return GestureDetector(
+            onTap: () {
+              // Navigate to activities page
+              Navigator.pushNamed(context, '/activities');
+            },
+            child: Container(
+              width: 220,
+              margin: const EdgeInsets.only(right: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
                     borderRadius:
-                        BorderRadius.vertical(bottom: Radius.circular(12)),
+                        const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: Image.asset(
+                      activities[index]['image'],
+                      height: 114,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 114,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported),
+                        );
+                      },
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        activities[index]['name'],
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          BorderRadius.vertical(bottom: Radius.circular(12)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          activities[index]['name'],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.access_time,
-                              size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            activities[index]['duration'],
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.access_time,
+                                size: 14, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text(
+                              activities[index]['duration'],
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              activities[index]['price'],
+                              style: TextStyle(
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/activities');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[700],
+                            minimumSize: const Size(double.infinity, 32),
+                            padding: EdgeInsets.zero,
+                          ),
+                          child: const Text(
+                            'Book Now',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: Colors.white,
                               fontSize: 12,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Text(
-                            activities[index]['price'],
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[700],
-                          minimumSize: const Size(double.infinity, 32),
-                          padding: EdgeInsets.zero,
                         ),
-                        child: const Text(
-                          'Book Now',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -960,6 +991,560 @@ class ProfileScreen extends StatelessWidget {
         onTap: onTap,
       ),
     );
+  }
+}
+
+// NEW: Events Page
+class EventsPage extends StatelessWidget {
+  const EventsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> events = [
+      {
+        'name': 'Kuomboka Ceremony',
+        'image': 'assets/kuomboka.jpg',
+        'description':
+            'Annual traditional ceremony of the Lozi people where the Litunga moves from the flood plains to higher ground.',
+        'date': 'April 2025',
+        'location': 'Mongu, Western Province',
+        'price': 50.0,
+        'category': 'Cultural',
+        'duration': '3 days',
+      },
+      {
+        'name': 'Nc\'wala Ceremony',
+        'image': 'assets/ncwala.jpg',
+        'description':
+            'Traditional harvest festival of the Ngoni people celebrating the first fruits of the season.',
+        'date': 'February 2025',
+        'location': 'Chipata, Eastern Province',
+        'price': 30.0,
+        'category': 'Cultural',
+        'duration': '2 days',
+      },
+      {
+        'name': 'Lwiindi Ceremony',
+        'image': 'assets/lwiindi.jpg',
+        'description':
+            'Cultural ceremony of the Tonga people celebrating their heritage and traditions.',
+        'date': 'July 2025',
+        'location': 'Mazabuka, Southern Province',
+        'price': 25.0,
+        'category': 'Cultural',
+        'duration': '1 day',
+      },
+      {
+        'name': 'Zambia International Music Festival',
+        'image': 'assets/music_festival.jpg',
+        'description':
+            'Annual music festival featuring local and international artists across various genres.',
+        'date': 'August 2025',
+        'location': 'Lusaka',
+        'price': 75.0,
+        'category': 'Music',
+        'duration': '3 days',
+      },
+      {
+        'name': 'Victoria Falls Marathon',
+        'image': 'assets/marathon.jpg',
+        'description':
+            'International marathon event with scenic routes around Victoria Falls.',
+        'date': 'June 2025',
+        'location': 'Livingstone',
+        'price': 40.0,
+        'category': 'Sports',
+        'duration': '1 day',
+      },
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Events'),
+        backgroundColor: Colors.green[700],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () {
+              // Show filter options
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search events...',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          // Events list
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = events[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
+                        child: Image.asset(
+                          event['image'],
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 180,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.event, size: 60),
+                            );
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    event['name'],
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    event['category'],
+                                    style: TextStyle(
+                                      color: Colors.green[800],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(Icons.location_on,
+                                    size: 16, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    event['location'],
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today,
+                                    size: 16, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                Text(
+                                  event['date'],
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                                const SizedBox(width: 16),
+                                Icon(Icons.access_time,
+                                    size: 16, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                Text(
+                                  event['duration'],
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              event['description'],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: Colors.grey[800]),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "\$${event['price'].toStringAsFixed(0)}",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green[700],
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    // Navigate to event booking
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green[700],
+                                  ),
+                                  child: const Text(
+                                    'Book Event',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// NEW: Activities Page
+class ActivitiesPage extends StatelessWidget {
+  const ActivitiesPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> activities = [
+      {
+        'name': 'Victoria Falls Bungee Jumping',
+        'image': 'assets/bungee_jumping.jpg',
+        'description':
+            'Experience the ultimate adrenaline rush with a bungee jump from the Victoria Falls Bridge.',
+        'price': 120.0,
+        'duration': '1 hour',
+        'difficulty': 'Extreme',
+        'location': 'Victoria Falls Bridge',
+        'category': 'Adventure',
+        'minAge': 16,
+      },
+      {
+        'name': 'Zip Lining Adventure',
+        'image': 'assets/zip_lining.jpg',
+        'description':
+            'Soar through the air on multiple zip lines with breathtaking views of the Zambezi River.',
+        'price': 80.0,
+        'duration': '2 hours',
+        'difficulty': 'Moderate',
+        'location': 'Livingstone',
+        'category': 'Adventure',
+        'minAge': 12,
+      },
+      {
+        'name': 'Safari Game Drive',
+        'image': 'assets/safari_drive.jpg',
+        'description':
+            'Explore the wilderness and encounter magnificent wildlife in their natural habitat.',
+        'price': 150.0,
+        'duration': '4 hours',
+        'difficulty': 'Easy',
+        'location': 'South Luangwa National Park',
+        'category': 'Wildlife',
+        'minAge': 5,
+      },
+      {
+        'name': 'White Water Rafting',
+        'image': 'assets/rafting.jpg',
+        'description':
+            'Navigate through thrilling rapids on the mighty Zambezi River.',
+        'price': 95.0,
+        'duration': '3 hours',
+        'difficulty': 'Hard',
+        'location': 'Zambezi River',
+        'category': 'Water Sports',
+        'minAge': 14,
+      },
+      {
+        'name': 'Helicopter Tour',
+        'image': 'assets/helicopter_tour.jpg',
+        'description':
+            'Get a bird\'s eye view of Victoria Falls and the surrounding landscape.',
+        'price': 200.0,
+        'duration': '30 minutes',
+        'difficulty': 'Easy',
+        'location': 'Victoria Falls',
+        'category': 'Scenic',
+        'minAge': 3,
+      },
+      {
+        'name': 'Sunset River Cruise',
+        'image': 'assets/boat_cruise.jpg',
+        'description':
+            'Relax on a scenic cruise while watching the African sunset over the Zambezi.',
+        'price': 60.0,
+        'duration': '2 hours',
+        'difficulty': 'Easy',
+        'location': 'Zambezi River',
+        'category': 'Relaxation',
+        'minAge': 0,
+      },
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Activities'),
+        backgroundColor: Colors.green[700],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune),
+            onPressed: () {
+              // Show filter options
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Search and filter section
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search activities...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Category filters
+                SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _buildCategoryChip('All', true),
+                      _buildCategoryChip('Adventure', false),
+                      _buildCategoryChip('Wildlife', false),
+                      _buildCategoryChip('Water Sports', false),
+                      _buildCategoryChip('Scenic', false),
+                      _buildCategoryChip('Relaxation', false),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Activities grid
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: activities.length,
+              itemBuilder: (context, index) {
+                final activity = activities[index];
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                          child: Stack(
+                            children: [
+                              Image.asset(
+                                activity['image'],
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Icon(Icons.local_activity,
+                                        size: 40),
+                                  );
+                                },
+                              ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _getDifficultyColor(
+                                        activity['difficulty']),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    activity['difficulty'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                activity['name'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.access_time,
+                                      size: 12, color: Colors.grey[600]),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    activity['duration'],
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "\$${activity['price'].toStringAsFixed(0)}",
+                                    style: TextStyle(
+                                      color: Colors.green[700],
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      // Navigate to activity booking
+                                    },
+                                    icon: Icon(
+                                      Icons.add_circle,
+                                      color: Colors.green[700],
+                                    ),
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(String label, bool isSelected) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (selected) {
+          // Handle filter selection
+        },
+        backgroundColor: Colors.grey[200],
+        selectedColor: Colors.green[100],
+        labelStyle: TextStyle(
+          color: isSelected ? Colors.green[800] : Colors.grey[700],
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return Colors.green;
+      case 'moderate':
+        return Colors.orange;
+      case 'hard':
+        return Colors.red;
+      case 'extreme':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
   }
 }
 
