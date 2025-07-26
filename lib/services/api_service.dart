@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // UPDATED: Multiple URL options based on your environment
-  static const String _localIP = 'http://192.168.1.184:8080/api';
+  static const String _localIP = 'http://192.168.43.165:8080/api';
   static const String _emulatorURL = 'http://10.0.2.2:8080/api';
   static const String _localhostURL = 'http://127.0.0.1:8080/api';
 
@@ -220,4 +220,8 @@ class ApiService {
       };
     }
   }
+
+  static searchAttractions(String query) {}
+
+  static getAttractions() {}
 }

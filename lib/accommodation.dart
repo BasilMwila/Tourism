@@ -2,7 +2,7 @@
 // ignore_for_file: use_super_parameters, prefer_interpolation_to_compose_strings, sort_child_properties_last, use_build_context_synchronously, avoid_print, prefer_const_constructors
 
 import 'package:flutter/material.dart';
-import 'package:afrijourney/booking.dart';
+// import 'package:afrijourney/booking.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Accommodation {
@@ -594,14 +594,14 @@ class AccommodationDetailPage extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         // Navigate to booking page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BookingPage(
-                              attraction: null,
-                            ),
-                          ),
-                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => BookingPage(
+                        //       attraction: null,
+                        //     ),
+                        //   ),
+                        // );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[700],

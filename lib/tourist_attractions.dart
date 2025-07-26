@@ -2,7 +2,7 @@
 // ignore_for_file: use_super_parameters
 
 import 'package:flutter/material.dart';
-import 'package:afrijourney/booking.dart';
+// import 'package:afrijourney/booking.dart';
 
 class TouristAttraction {
   final String name;
@@ -297,14 +297,14 @@ class AttractionDetailPage extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         // Navigate to booking page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BookingPage(
-                              attraction: attraction,
-                            ),
-                          ),
-                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => BookingPage(
+                        //       attraction: attraction,
+                        //     ),
+                        //   ),
+                        // );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[700],
